@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Fundamental Analysis Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Fundamental analysis dashboard for stock research: growth, margins, ROE, ROA and free cash flow metrics." />
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --bg: #070b12;
+      --bg-card: #0f1726;
+      --bg-soft: #161f33;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.2);
+      --accent-alt: #a855f7;
+      --text-main: #f9fafb;
+      --text-muted: #9ca3af;
+      --danger: #f97373;
+      --success: #4ade80;
+      --radius-lg: 18px;
+      --radius-md: 12px;
+      --shadow-soft: 0 18px 40px rgba(0, 0, 0, 0.45);
+      --max-width: 1120px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: radial-gradient(circle at top, #1e293b 0, #020617 50%);
+      color: var(--text-main);
+      min-height: 100vh;
+    }
+
+    .page {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem 3rem;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.8rem;
+    }
+
+    .title-block h1 {
+      font-size: 1.5rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .title-block p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-top: 0.3rem;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.9rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      background: rgba(15, 23, 42, 0.8);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    main {
+      display: grid;
+      gap: 1.5rem;
+    }
+
+    @media (min-width: 960px) {
+      main {
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      }
+    }
+
+    .card {
+      background: radial-gradient(circle at top left, #111827 0, #020617 65%);
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      box-shadow: var(--shadow-soft);
+      padding: 1.2rem 1.1rem 1.4rem;
+    }
+
+    .card h2 {
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--text-muted);
+      margin-bottom: 0.9rem;
+    }
+
+    .card h3 {
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: var(--text-muted);
+      margin-bottom: 0.6rem;
+    }
+
+    .subtitle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.9rem;
+    }
+
+    .input-grid {
+      display: grid;
+      grid-template-columns: 1.1fr repeat(5, minmax(0, 1fr));
+      gap: 0.4rem;
+      align-items: center;
+      font-size: 0.8rem;
+    }
+
+    .input-grid-header {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--text-muted);
+      padding-bottom: 0.2rem;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.4);
+      margin-bottom: 0.3rem;
+    }
+
+    .input-row-label {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 0.4rem 0.45rem;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text-main);
+      font-size: 0.8rem;
+    }
+
+    input[type="number"]:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent-soft);
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 0.35rem 0.55rem;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text-main);
+      font-size: 0.82rem;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent-soft);
+    }
+
+    .ticker-row {
+      display: flex;
+      gap: 0.6rem;
+      margin-bottom: 0.8rem;
+      flex-wrap: wrap;
+    }
+
+    .ticker-row > div {
+      flex: 1 1 120px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 0.2rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.55rem 1.25rem;
+      border-radius: 999px;
+      border: 1px solid var(--accent);
+      background: radial-gradient(circle at top left, var(--accent), var(--accent-alt));
+      color: #020617;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      margin-top: 0.6rem;
+      box-shadow: 0 14px 32px rgba(56, 189, 248, 0.35);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 18px 40px rgba(56, 189, 248, 0.45);
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.8rem;
+      margin-bottom: 1rem;
+      margin-top: 0.4rem;
+    }
+
+    .metric-card {
+      background: linear-gradient(135deg, #020617, #020617);
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      padding: 0.6rem 0.7rem;
+      font-size: 0.8rem;
+    }
+
+    .metric-label {
+      color: var(--text-muted);
+      font-size: 0.73rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 0.25rem;
+    }
+
+    .metric-value {
+      font-size: 0.96rem;
+      font-weight: 600;
+    }
+
+    .metric-good {
+      color: var(--success);
+    }
+
+    .metric-bad {
+      color: var(--danger);
+    }
+
+    .metric-note {
+      font-size: 0.73rem;
+      color: var(--text-muted);
+      margin-top: 0.15rem;
+    }
+
+    .summary-text {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      white-space: pre-line;
+    }
+
+    .charts-grid {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .chart-card {
+      background: radial-gradient(circle at top left, #020617, #020617);
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      padding: 0.7rem 0.7rem 0.9rem;
+    }
+
+    .chart-title {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-muted);
+      margin-bottom: 0.4rem;
+    }
+
+    canvas {
+      max-height: 220px;
+    }
+
+    footer {
+      margin-top: 1.5rem;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="title-block">
+        <h1>Fundamental Analysis Dashboard</h1>
+        <p>Quickly evaluate growth, profitability, and returns using 3–5 years of financials.</p>
+      </div>
+      <div class="tag">
+        <span>For study / research only · Not investment advice</span>
+      </div>
+    </header>
+
+    <main>
+      <!-- LEFT: INPUTS -->
+      <section class="card">
+        <h2>1 · Enter Financial Data</h2>
+        <p class="subtitle">
+          Use whole numbers (e.g., 2500 = $2,500). You can leave a year blank if you only have 3–4 years.
+        </p>
+
+        <div class="ticker-row">
+          <div>
+            <label for="ticker">Ticker / Company</label>
+            <input type="text" id="ticker" placeholder="e.g., AAPL, TD, SHOP" />
+          </div>
+          <div>
+            <label for="currency">Reporting currency</label>
+            <input type="text" id="currency" placeholder="e.g., CAD, USD" />
+          </div>
+        </div>
+
+        <!-- YEARS ROW -->
+        <div class="input-grid input-grid-header">
+          <div>Metric</div>
+          <div><input type="text" id="year0" placeholder="Year 1" /></div>
+          <div><input type="text" id="year1" placeholder="Year 2" /></div>
+          <div><input type="text" id="year2" placeholder="Year 3" /></div>
+          <div><input type="text" id="year3" placeholder="Year 4" /></div>
+          <div><input type="text" id="year4" placeholder="Year 5" /></div>
+        </div>
+
+        <!-- Revenue -->
+        <div class="input-grid">
+          <div class="input-row-label">Revenue</div>
+          <input type="number" id="rev0" step="any" />
+          <input type="number" id="rev1" step="any" />
+          <input type="number" id="rev2" step="any" />
+          <input type="number" id="rev3" step="any" />
+          <input type="number" id="rev4" step="any" />
+        </div>
+
+        <!-- Net Income -->
+        <div class="input-grid">
+          <div class="input-row-label">Net income</div>
+          <input type="number" id="ni0" step="any" />
+          <input type="number" id="ni1" step="any" />
+          <input type="number" id="ni2" step="any" />
+          <input type="number" id="ni3" step="any" />
+          <input type="number" id="ni4" step="any" />
+        </div>
+
+        <!-- Total Assets -->
+        <div class="input-grid">
+          <div class="input-row-label">Total assets</div>
+          <input type="number" id="assets0" step="any" />
+          <input type="number" id="assets1" step="any" />
+          <input type="number" id="assets2" step="any" />
+          <input type="number" id="assets3" step="any" />
+          <input type="number" id="assets4" step="any" />
+        </div>
+
+        <!-- Equity -->
+        <div class="input-grid">
+          <div class="input-row-label">Shareholders' equity</div>
+          <input type="number" id="equity0" step="any" />
+          <input type="number" id="equity1" step="any" />
+          <input type="number" id="equity2" step="any" />
+          <input type="number" id="equity3" step="any" />
+          <input type="number" id="equity4" step="any" />
+        </div>
+
+        <!-- Operating Cash Flow -->
+        <div class="input-grid">
+          <div class="input-row-label">Operating cash flow</div>
+          <input type="number" id="ocf0" step="any" />
+          <input type="number" id="ocf1" step="any" />
+          <input type="number" id="ocf2" step="any" />
+          <input type="number" id="ocf3" step="any" />
+          <input type="number" id="ocf4" step="any" />
+        </div>
+
+        <button class="btn" id="analyzeBtn">Run analysis</button>
+      </section>
+
+      <!-- RIGHT: OUTPUTS -->
+      <section class="card">
+        <h2>2 · Results & Interpretation</h2>
+
+        <h3>Key metrics</h3>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-label">Revenue CAGR</div>
+            <div class="metric-value" id="revCagr">–</div>
+            <div class="metric-note">Annualized growth from first to last non-blank year.</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Latest net margin</div>
+            <div class="metric-value" id="netMargin">–</div>
+            <div class="metric-note">Net income ÷ revenue.</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Latest ROE</div>
+            <div class="metric-value" id="roe">–</div>
+            <div class="metric-note">Net income ÷ shareholders’ equity.</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Latest ROA</div>
+            <div class="metric-value" id="roa">–</div>
+            <div class="metric-note">Net income ÷ total assets.</div>
+          </div>
+        </div>
+
+        <h3>Cash flow</h3>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-label">Latest OCF margin</div>
+            <div class="metric-value" id="ocfMargin">–</div>
+            <div class="metric-note">Operating cash flow ÷ revenue.</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Quality of earnings</div>
+            <div class="metric-value" id="earningsQuality">–</div>
+            <div class="metric-note">Compares OCF margin vs. net margin.</div>
+          </div>
+        </div>
+
+        <h3>Summary</h3>
+        <p class="summary-text" id="summaryText">
+          Enter data on the left and click “Run analysis” to see a quick interpretation of growth, margins, and returns.
+        </p>
+      </section>
+    </main>
+
+    <!-- CHARTS -->
+    <section class="card" style="margin-top:1.6rem;">
+      <h2>3 · Trend charts</h2>
+      <p class="subtitle">
+        Visualize how revenue, profitability, and returns have evolved over time.
+      </p>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-title">Revenue & net income</div>
+          <canvas id="revNiChart"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Margins & returns</div>
+          <canvas id="marginChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      Built by you for learning and research. Double-check numbers with official filings before making any decisions.
+    </footer>
+  </div>
+
+  <script>
+    const analyzeBtn = document.getElementById("analyzeBtn");
+
+    let revNiChart;
+    let marginChart;
+
+    function getSeries(prefix) {
+      const values = [];
+      for (let i = 0; i < 5; i++) {
+        const el = document.getElementById(prefix + i);
+        if (!el) continue;
+        const v = parseFloat(el.value);
+        values.push(isNaN(v) ? null : v);
+      }
+      return values;
+    }
+
+    function getYears() {
+      const years = [];
+      for (let i = 0; i < 5; i++) {
+        const el = document.getElementById("year" + i);
+        const v = (el && el.value.trim()) || "";
+        years.push(v || "Year " + (i + 1));
+      }
+      return years;
+    }
+
+    function firstLastNonNull(arr) {
+      let first = -1;
+      let last = -1;
+      for (let i = 0; i < arr.length; i++) {
+        if (arr[i] != null) {
+          if (first === -1) first = i;
+          last = i;
+        }
+      }
+      return { first, last };
+    }
+
+    function fmtPct(num) {
+      if (num === null || isNaN(num)) return "–";
+      return (num * 100).toFixed(1) + "%";
+    }
+
+    function fmtPctPlain(num) {
+      if (num === null || isNaN(num)) return null;
+      return (num * 100).toFixed(1);
+    }
+
+    function fmtNumber(num) {
+      if (num === null || isNaN(num)) return "–";
+      if (Math.abs(num) >= 1_000_000_000) {
+        return (num / 1_000_000_000).toFixed(2) + "B";
+      }
+      if (Math.abs(num) >= 1_000_000) {
+        return (num / 1_000_000).toFixed(2) + "M";
+      }
+      if (Math.abs(num) >= 1_000) {
+        return (num / 1_000).toFixed(2) + "K";
+      }
+      return num.toFixed(2);
+    }
+
+    function runAnalysis() {
+      const years = getYears();
+      const ticker = document.getElementById("ticker").value.trim() || "The company";
+      const currency = document.getElementById("currency").value.trim() || "reported currency";
+
+      const revenue = getSeries("rev");
+      const netIncome = getSeries("ni");
+      const assets = getSeries("assets");
+      const equity = getSeries("equity");
+      const ocf = getSeries("ocf");
+
+      // Compute CAGR for revenue
+      const { first: rFirst, last: rLast } = firstLastNonNull(revenue);
+      let revCagrValue = null;
+      if (rFirst !== -1 && rLast !== -1 && rLast > rFirst) {
+        const yearsDiff = rLast - rFirst;
+        const start = revenue[rFirst];
+        const end = revenue[rLast];
+        if (start > 0 && end > 0) {
+          revCagrValue = Math.pow(end / start, 1 / yearsDiff) - 1;
+        }
+      }
+
+      // Latest index where we have revenue and net income
+      let latest = -1;
+      for (let i = revenue.length - 1; i >= 0; i--) {
+        if (revenue[i] != null && netIncome[i] != null && revenue[i] !== 0) {
+          latest = i;
+          break;
+        }
+      }
+
+      let netMarginValue = null;
+      let roeValue = null;
+      let roaValue = null;
+      let ocfMarginValue = null;
+
+      if (latest !== -1) {
+        netMarginValue = netIncome[latest] / revenue[latest];
+
+        if (equity[latest] != null && equity[latest] !== 0) {
+          roeValue = netIncome[latest] / equity[latest];
+        }
+
+        if (assets[latest] != null && assets[latest] !== 0) {
+          roaValue = netIncome[latest] / assets[latest];
+        }
+
+        if (ocf[latest] != null && revenue[latest] !== 0) {
+          ocfMarginValue = ocf[latest] / revenue[latest];
+        }
+      }
+
+      // Update metric cards
+      const revCagrEl = document.getElementById("revCagr");
+      const netMarginEl = document.getElementById("netMargin");
+      const roeEl = document.getElementById("roe");
+      const roaEl = document.getElementById("roa");
+      const ocfMarginEl = document.getElementById("ocfMargin");
+      const earningsQualityEl = document.getElementById("earningsQuality");
+
+      revCagrEl.textContent = revCagrValue === null ? "–" : fmtPct(revCagrValue);
+      netMarginEl.textContent = fmtPct(netMarginValue);
+      roeEl.textContent = fmtPct(roeValue);
+      roaEl.textContent = fmtPct(roaValue);
+      ocfMarginEl.textContent = fmtPct(ocfMarginValue);
+
+      // Earnings quality assessment
+      let eqText = "–";
+      if (ocfMarginValue !== null && netMarginValue !== null) {
+        const diff = ocfMarginValue - netMarginValue; // positive = cash flow stronger than earnings
+        const diffPct = fmtPctPlain(diff);
+        if (diff > 0.05) {
+          eqText = diffPct + " pts · strong (cash flow ahead of earnings)";
+        } else if (diff < -0.05) {
+          eqText = diffPct + " pts · weaker (earnings ahead of cash flow)";
+        } else {
+          eqText = (diffPct || "0.0") + " pts · broadly aligned";
+        }
+      }
+      earningsQualityEl.textContent = eqText;
+
+      // Summary text
+      const summaryEl = document.getElementById("summaryText");
+      const yearLabelFirst = rFirst !== -1 ? years[rFirst] : "";
+      const yearLabelLast = rLast !== -1 ? years[rLast] : "";
+
+      let lines = [];
+
+      if (revCagrValue !== null) {
+        lines.push(
+          `${ticker} grew revenue from ${fmtNumber(revenue[rFirst])} to ${fmtNumber(
+            revenue[rLast]
+          )} ${currency} between ${yearLabelFirst} and ${yearLabelLast}, an annualized growth rate of ${fmtPct(
+            revCagrValue
+          )}.`
+        );
+      } else {
+        lines.push(`${ticker} does not yet have enough revenue history here to calculate a clear CAGR.`);
+      }
+
+      if (netMarginValue !== null) {
+        lines.push(
+          `The latest net margin is ${fmtPct(
+            netMarginValue
+          )}, indicating how much profit is kept from each ${currency} of sales.`
+        );
+      }
+
+      if (roeValue !== null) {
+        lines.push(
+          `Return on equity in the most recent year is ${fmtPct(
+            roeValue
+          )}, showing the profit generated on shareholders’ capital.`
+        );
+      }
+
+      if (roaValue !== null) {
+        lines.push(
+          `Return on assets is ${fmtPct(
+            roaValue
+          )}, which reflects how efficiently the asset base is being used to generate earnings.`
+        );
+      }
+
+      if (ocfMarginValue !== null) {
+        lines.push(
+          `Operating cash flow margin is ${fmtPct(
+            ocfMarginValue
+          )}; comparing this with net margin helps assess the quality of earnings.`
+        );
+      }
+
+      summaryEl.textContent = lines.join("\n\n");
+
+      // Chart data
+      const labelYears = years;
+      const margins = revenue.map((rev, i) => {
+        if (rev == null || rev === 0 || netIncome[i] == null) return null;
+        return (netIncome[i] / rev) * 100;
+      });
+      const roes = equity.map((eq, i) => {
+        if (eq == null || eq === 0 || netIncome[i] == null) return null;
+        return (netIncome[i] / eq) * 100;
+      });
+      const ocfMargins = revenue.map((rev, i) => {
+        if (rev == null || rev === 0 || ocf[i] == null) return null;
+        return (ocf[i] / rev) * 100;
+      });
+
+      // Destroy existing charts if any
+      if (revNiChart) revNiChart.destroy();
+      if (marginChart) marginChart.destroy();
+
+      const revNiCtx = document.getElementById("revNiChart").getContext("2d");
+      revNiChart = new Chart(revNiCtx, {
+        type: "line",
+        data: {
+          labels: labelYears,
+          datasets: [
+            {
+              label: "Revenue",
+              data: revenue,
+              borderColor: "#38bdf8",
+              backgroundColor: "rgba(56, 189, 248, 0.15)",
+              tension: 0.3,
+              yAxisID: "y",
+            },
+            {
+              label: "Net income",
+              data: netIncome,
+              borderColor: "#a855f7",
+              backgroundColor: "rgba(168, 85, 247, 0.15)",
+              tension: 0.3,
+              yAxisID: "y",
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              labels: {
+                color: "#e5e7eb",
+                font: { size: 11 },
+              },
+            },
+          },
+          scales: {
+            x: {
+              ticks: { color: "#9ca3af", font: { size: 10 } },
+              grid: { color: "rgba(55, 65, 81, 0.6)" },
+            },
+            y: {
+              ticks: { color: "#9ca3af", font: { size: 10 } },
+              grid: { color: "rgba(31, 41, 55, 0.6)" },
+            },
+          },
+        },
+      });
+
+      const marginCtx = document.getElementById("marginChart").getContext("2d");
+      marginChart = new Chart(marginCtx, {
+        type: "line",
+        data: {
+          labels: labelYears,
+          datasets: [
+            {
+              label: "Net margin (%)",
+              data: margins,
+              borderColor: "#38bdf8",
+              backgroundColor: "rgba(56, 189, 248, 0.15)",
+              tension: 0.3,
+              yAxisID: "y",
+            },
+            {
+              label: "ROE (%)",
+              data: roes,
+              borderColor: "#22c55e",
+              backgroundColor: "rgba(34, 197, 94, 0.15)",
+              tension: 0.3,
+              yAxisID: "y",
+            },
+            {
+              label: "OCF margin (%)",
+              data: ocfMargins,
+              borderColor: "#a855f7",
+              backgroundColor: "rgba(168, 85, 247, 0.15)",
+              tension: 0.3,
+              yAxisID: "y",
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              labels: {
+                color: "#e5e7eb",
+                font: { size: 11 },
+              },
+            },
+          },
+          scales: {
+            x: {
+              ticks: { color: "#9ca3af", font: { size: 10 } },
+              grid: { color: "rgba(55, 65, 81, 0.6)" },
+            },
+            y: {
+              ticks: {
+                color: "#9ca3af",
+                font: { size: 10 },
+                callback: function (value) {
+                  return value + "%";
+                },
+              },
+              grid: { color: "rgba(31, 41, 55, 0.6)" },
+            },
+          },
+        },
+      });
+    }
+
+    analyzeBtn.addEventListener("click", runAnalysis);
+  </script>
+</body>
+</html>
