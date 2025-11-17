@@ -299,19 +299,71 @@
       color: var(--text-muted);
       text-align: center;
     }
+    .header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.45rem;
+}
+
+@media (max-width: 640px) {
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .header-right {
+    align-items: flex-start;
+  }
+}
+
+/* Outline button style for PDF download */
+.btn-outline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 1.05rem;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.9);
+  background: transparent;
+  color: var(--text-main);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.btn-outline:hover {
+  background: rgba(15, 23, 42, 0.8);
+}
+
+/* Print styles: hide the PDF button + tag when printing */
+@media print {
+  body {
+    background: #ffffff;
+  }
+  .btn-outline,
+  .tag {
+    display: none !important;
+  }
+}
+
   </style>
 </head>
 <body>
   <div class="page">
-    <header>
-      <div class="title-block">
-        <h1>Fundamental Analysis Dashboard</h1>
-        <p>Quickly evaluate growth, profitability, and returns using 3–5 years of financials.</p>
-      </div>
-      <div class="tag">
-        <span>For study / research only · Not investment advice</span>
-      </div>
-    </header>
+<header>
+  <div class="title-block">
+    <h1>Fundamental Analysis Dashboard</h1>
+    <p>Quickly evaluate growth, profitability, and returns using 3–5 years of financials.</p>
+  </div>
+  <div class="header-right">
+    <div class="tag">
+      <span>For study / research only · Not investment advice</span>
+    </div>
+    <button class="btn-outline" id="downloadPdfBtn">Download as PDF</button>
+  </div>
+</header>
+
 
     <main>
       <!-- LEFT: INPUTS -->
@@ -793,7 +845,67 @@
       });
     }
 
-    analyzeBtn.addEventListener("click", runAnalysis);
+analyzeBtn.addEventListener("click", runAnalysis);
+
+// Preload an example company and hook up the PDF button
+window.addEventListener("DOMContentLoaded", () => {
+  // Example: demo numbers for a fictional large-cap company
+  document.getElementById("ticker").value = "Example Co. (demo)";
+  document.getElementById("currency").value = "USD";
+
+  // Years
+  document.getElementById("year0").value = "2020";
+  document.getElementById("year1").value = "2021";
+  document.getElementById("year2").value = "2022";
+  document.getElementById("year3").value = "2023";
+  document.getElementById("year4").value = "2024";
+
+  // Revenue
+  document.getElementById("rev0").value = 260000;
+  document.getElementById("rev1").value = 275000;
+  document.getElementById("rev2").value = 300000;
+  document.getElementById("rev3").value = 315000;
+  document.getElementById("rev4").value = 340000;
+
+  // Net income
+  document.getElementById("ni0").value = 55000;
+  document.getElementById("ni1").value = 60000;
+  document.getElementById("ni2").value = 65000;
+  document.getElementById("ni3").value = 68000;
+  document.getElementById("ni4").value = 72000;
+
+  // Total assets
+  document.getElementById("assets0").value = 320000;
+  document.getElementById("assets1").value = 340000;
+  document.getElementById("assets2").value = 360000;
+  document.getElementById("assets3").value = 380000;
+  document.getElementById("assets4").value = 400000;
+
+  // Shareholders' equity
+  document.getElementById("equity0").value = 65000;
+  document.getElementById("equity1").value = 70000;
+  document.getElementById("equity2").value = 72000;
+  document.getElementById("equity3").value = 75000;
+  document.getElementById("equity4").value = 78000;
+
+  // Operating cash flow
+  document.getElementById("ocf0").value = 60000;
+  document.getElementById("ocf1").value = 64000;
+  document.getElementById("ocf2").value = 68000;
+  document.getElementById("ocf3").value = 70000;
+  document.getElementById("ocf4").value = 75000;
+
+  // Run initial analysis so the page isn't empty
+  runAnalysis();
+
+  // PDF button -> print dialog (you can save as PDF)
+  const pdfBtn = document.getElementById("downloadPdfBtn");
+  if (pdfBtn) {
+    pdfBtn.addEventListener("click", () => {
+      window.print();
+    });
+  }
+});
   </script>
 </body>
 </html>
