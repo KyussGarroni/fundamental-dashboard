@@ -581,7 +581,28 @@
       }
       return num.toFixed(2);
     }
+function attachPasteHandler(prefix) {
+  const firstInput = document.getElementById(prefix + "0");
+  if (!firstInput) return;
 
+  firstInput.addEventListener("paste", (e) => {
+    e.preventDefault();
+    const clipboard = (e.clipboardData || window.clipboardData).getData("text") || "";
+    // Split by spaces, commas, tabs, newlines
+    let parts = clipboard
+      .split(/[\s,]+/)
+      .map((p) => p.replace(/[^0-9.-]/g, "")) // remove commas and other junk
+      .filter((p) => p.length > 0);
+
+    // Fill up to 5 year cells for that metric
+    for (let i = 0; i < 5; i++) {
+      const field = document.getElementById(prefix + i);
+      if (field && parts[i] !== undefined) {
+        field.value = parts[i];
+      }
+    }
+  });
+}
     function runAnalysis() {
       const years = getYears();
       const ticker = document.getElementById("ticker").value.trim() || "The company";
@@ -894,6 +915,13 @@ window.addEventListener("DOMContentLoaded", () => {
   document.getElementById("ocf2").value = 68000;
   document.getElementById("ocf3").value = 70000;
   document.getElementById("ocf4").value = 75000;
+  
+  // Allow “smart paste” from Yahoo: paste once into first cell, fill row
+  attachPasteHandler("rev");     // Revenue
+  attachPasteHandler("ni");      // Net income
+  attachPasteHandler("assets");  // Total assets
+  attachPasteHandler("equity");  // Shareholders' equity
+  attachPasteHandler("ocf");     // Operating cash flow
 
   // Run initial analysis so the page isn't empty
   runAnalysis();
