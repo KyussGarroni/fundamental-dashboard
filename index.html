@@ -589,6 +589,7 @@ function attachPasteHandler(prefix) {
     e.preventDefault();
     const clipboard = (e.clipboardData || window.clipboardData).getData("text") || "";
     // Split by spaces, commas, tabs, newlines
+    
 let parts = clipboard
   .split(/\s+/)                              // ⬅️ split ONLY on whitespace
   .map((p) => p.replace(/[^0-9.-]/g, ""))    // this will remove commas
