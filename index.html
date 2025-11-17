@@ -589,10 +589,10 @@ function attachPasteHandler(prefix) {
     e.preventDefault();
     const clipboard = (e.clipboardData || window.clipboardData).getData("text") || "";
     // Split by spaces, commas, tabs, newlines
-    let parts = clipboard
-      .split(/[\s,]+/)
-      .map((p) => p.replace(/[^0-9.-]/g, "")) // remove commas and other junk
-      .filter((p) => p.length > 0);
+let parts = clipboard
+  .split(/\s+/)                              // ⬅️ split ONLY on whitespace
+  .map((p) => p.replace(/[^0-9.-]/g, ""))    // this will remove commas
+  .filter((p) => p.length > 0);
 
     // Fill up to 5 year cells for that metric
     for (let i = 0; i < 5; i++) {
